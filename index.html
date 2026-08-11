@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Muestreo de aceptación · ISO 2859-1 y ISO 3951-1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="./libs/xlsx.full.min.js"></script>
+<style>
+:root{
+  --paper:#E7ECEF; --panel:#FFFFFF; --ink:#15202B; --ink2:#54677A; --ink3:#8496A6;
+  --rule:#C5D0D9; --rule2:#E2E8ED;
+  --blue:#12557F; --blue-d:#0C3A58; --blue-soft:#D9E8F3;
+  --amber:#A66A12; --amber-soft:#F7EDDA;
+  --green:#1F6B50; --green-soft:#DDEFE7;
+  --red:#963028; --red-soft:#F7E2E0;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:700;letter-spacing:.01em;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding:0 var(--s4)}
+
+header.top{background:var(--blue-d);color:#EAF1F6}
+header.top .wrap{padding-top:var(--s5);padding-bottom:0}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8FB6D2}
+header.top h1{font-size:clamp(24px,3.6vw,36px);line-height:1.05;margin-top:var(--s2);color:#fff}
+header.top p{margin:var(--s3) 0 0;max-width:62ch;color:#BED4E4;font-size:14px}
+
+.tabs{display:flex;margin-top:var(--s5)}
+.tabs button{
+  appearance:none;border:0;cursor:pointer;background:#164B70;color:#BED4E4;
+  padding:11px 18px;font-family:"IBM Plex Sans Condensed",sans-serif;font-weight:600;font-size:15px;
+  border-bottom:3px solid transparent;text-align:left;
+}
+.tabs button small{display:block;font-family:"IBM Plex Mono",monospace;font-weight:400;font-size:10.5px;letter-spacing:.08em;opacity:.85}
+.tabs button:hover{background:#1B5A83;color:#fff}
+.tabs button[aria-selected=true]{background:var(--paper);color:var(--ink);border-bottom-color:var(--amber)}
+.tabs button[aria-selected=true] small{color:var(--ink2);opacity:1}
+
+main{padding:var(--s6) 0 var(--s7)}
+.cols{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:var(--s5);align-items:start}
+@media(max-width:900px){.cols{grid-template-columns:1fr}}
+.stack{display:grid;gap:var(--s5);min-width:0}
+
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:2px}
+.card>.hd{display:flex;align-items:baseline;gap:var(--s2);padding:var(--s3) var(--s4);border-bottom:1px solid var(--rule2)}
+.card>.hd h2{font-size:15px;text-transform:uppercase;letter-spacing:.06em}
+.card>.hd .tag{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink3)}
+.card>.bd{padding:var(--s4)}
+.sticky{position:sticky;top:var(--s4)}
+@media(max-width:900px){.sticky{position:static}}
+
+label.fld{display:block;margin-bottom:var(--s4)}
+.lb{display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);margin-bottom:var(--s1)}
+input[type=text],input[type=number],select{
+  width:100%;padding:9px 10px;border:1px solid var(--rule);border-radius:2px;background:#fff;
+  font-family:"IBM Plex Mono",monospace;font-size:14px;color:var(--ink);
+}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--rule);border-radius:2px;overflow:hidden}
+.seg button{appearance:none;border:0;border-right:1px solid var(--rule);background:#fff;cursor:pointer;padding:9px 4px;font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ink2)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed=true]{background:var(--blue);color:#fff;font-weight:600}
+.seg button:hover:not([aria-pressed=true]){background:var(--blue-soft)}
+.hint{font-size:12px;color:var(--ink2);margin:var(--s1) 0 0}
+.btn{appearance:none;border:1px solid var(--blue);background:var(--blue);color:#fff;cursor:pointer;padding:9px 14px;border-radius:2px;font-family:"IBM Plex Sans",sans-serif;font-size:14px;font-weight:600}
+.btn:hover{background:var(--blue-d);border-color:var(--blue-d)}
+.btn.ghost{background:#fff;color:var(--blue)}
+.btn.ghost:hover{background:var(--blue-soft)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:var(--s2);flex-wrap:wrap;align-items:center}
+
+.plan{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule2)}
+@media(max-width:560px){.plan{grid-template-columns:repeat(2,1fr)}}
+.plan .cell{padding:var(--s4);border-right:1px solid var(--rule2);border-bottom:1px solid var(--rule2)}
+.plan .cell:nth-child(4n){border-right:0}
+.plan .k{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+.plan .v{font-family:"IBM Plex Mono",monospace;font-size:30px;font-weight:600;line-height:1.15;margin-top:var(--s1);word-break:break-word}
+.plan .v small{font-size:14px;font-weight:400;color:var(--ink2)}
+.note{display:flex;gap:var(--s3);padding:var(--s3) var(--s4);font-size:13.5px;border-bottom:1px solid var(--rule2);background:var(--blue-soft)}
+.note.warn{background:var(--amber-soft)}
+.note.stop{background:var(--red-soft)}
+.note .ic{font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--blue);white-space:nowrap}
+.note.warn .ic{color:var(--amber)}
+.note.stop .ic{color:var(--red)}
+
+.strip{overflow-x:auto;padding:var(--s4)}
+table.master{border-collapse:collapse;width:100%;min-width:520px;font-family:"IBM Plex Mono",monospace;font-size:13px}
+table.master th{font-weight:600;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);text-align:left;padding:0 8px 6px;border-bottom:1px solid var(--rule);white-space:nowrap}
+table.master td{padding:5px 8px;border-bottom:1px solid var(--rule2);white-space:nowrap}
+table.master td.arrow{color:var(--ink3)}
+tr.origen td{background:var(--amber-soft)}
+tr.usado td{background:var(--blue);color:#fff}
+tr.usado td.arrow{color:#fff}
+tr.usado td:first-child{font-weight:600}
+.legend{display:flex;gap:var(--s4);flex-wrap:wrap;padding:0 var(--s4) var(--s4);font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:12px;height:12px;vertical-align:-1px;margin-right:6px;border:1px solid var(--rule)}
+.legend .l1 i{background:var(--amber-soft)} .legend .l2 i{background:var(--blue);border-color:var(--blue)}
+
+.drop{border:1.5px dashed var(--rule);border-radius:2px;padding:var(--s5);text-align:center;background:#FAFCFD}
+.drop.over{border-color:var(--blue);background:var(--blue-soft)}
+.drop p{margin:var(--s2) 0 0;font-size:13px;color:var(--ink2)}
+.tbl-scroll{overflow:auto;max-height:340px;border:1px solid var(--rule2);border-radius:2px}
+table.data{border-collapse:collapse;width:100%;font-size:12.5px;font-family:"IBM Plex Mono",monospace}
+table.data th{position:sticky;top:0;background:#F2F6F8;text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink2);white-space:nowrap}
+table.data td{padding:5px 8px;border-bottom:1px solid var(--rule2);white-space:nowrap;max-width:280px;overflow:hidden;text-overflow:ellipsis}
+table.data tr:nth-child(even) td{background:#FBFCFD}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+.kpis{display:flex;gap:var(--s5);flex-wrap:wrap;font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ink2)}
+.kpis b{color:var(--ink)}
+.verdict{padding:var(--s4);font-family:"IBM Plex Sans Condensed",sans-serif;font-size:21px;font-weight:700}
+.verdict.ok{background:var(--green-soft);color:var(--green)}
+.verdict.no{background:var(--red-soft);color:var(--red)}
+.verdict.mid{background:#F1F4F6;color:var(--ink2)}
+.msg{padding:var(--s3) var(--s4);font-size:13.5px;background:var(--red-soft);color:var(--red);border:1px solid #E4C4C0;border-radius:2px;margin-bottom:var(--s4)}
+.hidden{display:none !important}
+.chartbox{padding:var(--s4);overflow-x:auto}
+svg.chart{display:block;width:100%;height:auto;min-width:420px;font-family:"IBM Plex Mono",monospace}
+.stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:var(--s3);margin-top:var(--s3)}
+.stat div{border-left:2px solid var(--rule);padding-left:var(--s2)}
+.stat .k{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+.stat .v{font-family:"IBM Plex Mono",monospace;font-size:17px;font-weight:600}
+footer.foot{border-top:1px solid var(--rule);padding:var(--s5) 0 var(--s7);font-size:12.5px;color:var(--ink2)}
+footer.foot ul{margin:var(--s2) 0 var(--s4);padding-left:18px}
+footer.foot li{margin-bottom:4px}
+.selftest{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink2);border-top:1px solid var(--rule2);padding-top:var(--s3);line-height:1.7}
+.selftest .ok{color:var(--green);font-weight:600}
+.selftest .bad{color:var(--red);font-weight:600}
+@media print{
+  header.top{background:#fff;color:#000}
+  header.top h1,header.top p,.eyebrow{color:#000}
+  .no-print,.tabs{display:none !important}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="eyebrow">Normas Técnicas Ecuatorianas · INEN</div>
+    <h1>Muestreo de aceptación lote a lote</h1>
+    <p>Determina el plan de muestreo, resuelve las flechas de las tablas maestras y extrae la muestra aleatoria &mdash; simple o estratificada &mdash; a partir del archivo del universo o del solo tamaño del lote.</p>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-atr" aria-selected="true">Por atributos<small>ISO 2859-1 · conforme / no conforme</small></button>
+      <button role="tab" id="tab-var" aria-selected="false">Por variables<small>ISO 3951-1 · medición continua</small></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+<div class="cols">
+
+  <section class="card sticky no-print">
+    <div class="hd"><h2>Parámetros</h2><span class="tag" id="parTag">Atributos</span></div>
+    <div class="bd">
+
+      <label class="fld">
+        <span class="lb">Origen del universo</span>
+        <div class="seg" id="seg-origen" role="group">
+          <button type="button" data-v="manual" aria-pressed="true">Ingresar N</button>
+          <button type="button" data-v="archivo" aria-pressed="false">Desde archivo</button>
+        </div>
+      </label>
+
+      <label class="fld">
+        <span class="lb">Tamaño del lote (N)</span>
+        <input type="number" id="lotSize" min="2" step="1" value="1200" inputmode="numeric">
+        <p class="hint" id="lotHint">Cantidad de ítems que componen el lote.</p>
+      </label>
+
+      <label class="fld">
+        <span class="lb">Nivel de inspección</span>
+        <div class="seg" id="seg-nivel" role="group">
+          <button type="button" data-v="I" aria-pressed="false">I</button>
+          <button type="button" data-v="II" aria-pressed="true">II</button>
+          <button type="button" data-v="III" aria-pressed="false">III</button>
+        </div>
+        <p class="hint">II es el nivel general por defecto.</p>
+      </label>
+
+      <label class="fld">
+        <span class="lb">Severidad</span>
+        <div class="seg" id="seg-sev" role="group">
+          <button type="button" data-v="normal" aria-pressed="true">Normal</button>
+          <button type="button" data-v="estricta" aria-pressed="false">Estricta</button>
+          <button type="button" data-v="reducida" aria-pressed="false">Reducida</button>
+        </div>
+      </label>
+
+      <label class="fld">
+        <span class="lb">AQL (% de no conformes)</span>
+        <div class="seg" id="seg-aql" role="group">
+          <button type="button" data-v="1.0" aria-pressed="false">1,0</button>
+          <button type="button" data-v="4.0" aria-pressed="true">4,0</button>
+          <button type="button" data-v="10" aria-pressed="false">10</button>
+        </div>
+      </label>
+
+      <div id="varParams" class="hidden">
+        <label class="fld">
+          <span class="lb">Método</span>
+          <div class="seg" id="seg-metvar" role="group">
+            <button type="button" data-v="s" aria-pressed="true">Método "s"</button>
+            <button type="button" data-v="sigma" aria-pressed="false">Método "σ"</button>
+          </div>
+          <p class="hint" id="metvarHint">Desviación estándar del proceso desconocida: se estima con la muestra.</p>
+        </label>
+
+        <label class="fld" id="fld-sigma" style="display:none">
+          <span class="lb">σ conocida del proceso</span>
+          <input type="number" id="sigmaVal" step="any" placeholder="p. ej. 21">
+          <p class="hint">Solo con evidencia de que σ es constante y conocida (numeral 17.1).</p>
+        </label>
+
+        <label class="fld">
+          <span class="lb">Límite de especificación</span>
+          <div class="seg" id="seg-limite" role="group">
+            <button type="button" data-v="U" aria-pressed="true">Superior (U)</button>
+            <button type="button" data-v="L" aria-pressed="false">Inferior (L)</button>
+          </div>
+        </label>
+
+        <label class="fld">
+          <span class="lb" id="limLb">Valor del límite U</span>
+          <input type="number" id="limVal" step="any" placeholder="p. ej. 60">
+        </label>
+
+        <div class="fld" style="margin-bottom:0">
+          <span class="lb">Origen de n y k</span>
+          <div class="seg" id="seg-orig-nk" role="group">
+            <button type="button" data-v="tabla" aria-pressed="false">Tablas B / C</button>
+            <button type="button" data-v="manual" aria-pressed="true">Ingreso manual</button>
+          </div>
+          <div id="nkManual" style="margin-top:var(--s3)">
+            <div class="grid2">
+              <label style="display:block"><span class="lb">n</span><input type="number" id="nMan" min="2" step="1" placeholder="13"></label>
+              <label style="display:block"><span class="lb">k</span><input type="number" id="kMan" step="any" placeholder="1.426"></label>
+            </div>
+            <p class="hint">Tome n y k de la tabla impresa, en la fila de la letra código que se muestra al costado.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="stack">
+
+    <section class="card">
+      <div class="hd"><h2>Plan de muestreo</h2><span class="tag" id="planTag">&mdash;</span></div>
+      <div id="notes"></div>
+      <div class="plan" id="planCells"></div>
+      <div class="bd" style="border-top:0">
+        <p class="hint" id="regla" style="font-size:13.5px"></p>
+
+        <div class="grid2" id="dBox" style="margin-top:var(--s3)">
+          <label class="fld" style="margin:0">
+            <span class="lb">No conformes hallados (d)</span>
+            <input type="number" id="dFound" min="0" step="1" placeholder="0">
+          </label>
+          <div>
+            <span class="lb">Decisión sobre el lote</span>
+            <div class="verdict mid" id="veredicto">Ingrese d</div>
+          </div>
+        </div>
+
+        <div id="mBox" class="hidden" style="margin-top:var(--s3)">
+          <label class="fld" style="margin-bottom:var(--s2)">
+            <span class="lb">Mediciones de la muestra</span>
+            <input type="text" id="medIn" placeholder="53; 57; 49; 58; 59 …">
+            <p class="hint">Separe con coma, punto y coma o espacio. También puede tomarlas de una columna del archivo.</p>
+          </label>
+          <div class="row" style="margin-bottom:var(--s3)">
+            <select id="medCol" style="max-width:260px"><option value="-1">Columna de la medición…</option></select>
+            <button class="btn ghost" type="button" id="medColBtn" disabled>Tomar de la muestra generada</button>
+          </div>
+          <div class="stat" id="statBox"></div>
+          <div class="verdict mid" id="veredictoV" style="margin-top:var(--s3)">Ingrese las mediciones</div>
+          <div id="diagBox"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="masterCard">
+      <div class="hd"><h2>Columna de la tabla maestra</h2><span class="tag" id="tabTag">&mdash;</span></div>
+      <div class="strip"><table class="master" id="master"></table></div>
+      <div class="legend">
+        <span class="l1"><i></i>Letra que da el tamaño del lote</span>
+        <span class="l2"><i></i>Plan aplicado tras resolver la flecha</span>
+      </div>
+    </section>
+
+    <section class="card hidden" id="chartCard">
+      <div class="hd"><h2>Gráfico de aceptación</h2><span class="tag" id="chartTag">Numeral 16.3</span></div>
+      <div class="chartbox" id="chartBox"></div>
+    </section>
+
+    <section class="card no-print">
+      <div class="hd"><h2>Universo y extracción de la muestra</h2><span class="tag">Opcional</span></div>
+      <div class="bd">
+        <div id="fileMsg"></div>
+        <div class="drop" id="drop">
+          <button class="btn" type="button" id="pickBtn">Elegir archivo</button>
+          <input type="file" id="file" accept=".xlsx,.xls,.xlsm,.csv,.txt" class="hidden">
+          <p>Arrastre aquí un .xlsx, .xls o .csv. La primera fila debe contener los encabezados.<br>El archivo se procesa en su navegador: no se sube a ningún servidor.</p>
+        </div>
+
+        <div id="fileBox" class="hidden" style="margin-top:var(--s4)">
+          <div class="kpis" style="margin-bottom:var(--s3)">
+            <span>Archivo <b id="kFile">&mdash;</b></span>
+            <span>Filas de datos <b id="kRows">&mdash;</b></span>
+            <span>Columnas <b id="kCols">&mdash;</b></span>
+          </div>
+          <div class="grid2">
+            <label class="fld"><span class="lb">Hoja</span><select id="sheetSel"></select></label>
+            <label class="fld"><span class="lb">Método de muestreo</span>
+              <select id="metodo">
+                <option value="simple">Aleatorio simple</option>
+                <option value="estrat">Aleatorio estratificado (proporcional)</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid2">
+            <label class="fld" id="fld-estrato"><span class="lb">Columna del estrato</span><select id="estratoCol"></select></label>
+            <label class="fld"><span class="lb">Semilla (reproducibilidad)</span><input type="text" id="seed" value="CTRL-001"></label>
+          </div>
+          <label class="fld" id="fld-min1" style="margin-bottom:var(--s3)">
+            <input type="checkbox" id="min1" style="width:auto;margin-right:6px"> Asignar al menos 1 ítem por estrato
+            <p class="hint">Se aparta de la asignación estrictamente proporcional. Justifíquelo en el informe si lo activa.</p>
+          </label>
+          <div class="row">
+            <button class="btn" type="button" id="genBtn">Generar muestra</button>
+            <button class="btn ghost" type="button" id="csvBtn" disabled>Descargar CSV</button>
+            <button class="btn ghost" type="button" id="xlsxBtn" disabled>Descargar Excel</button>
+          </div>
+
+          <div id="allocBox" class="hidden" style="margin-top:var(--s4)">
+            <span class="lb">Asignación por estrato</span>
+            <div class="tbl-scroll"><table class="data" id="allocTbl"></table></div>
+          </div>
+
+          <div id="sampleBox" class="hidden" style="margin-top:var(--s4)">
+            <div class="kpis" style="margin-bottom:var(--s2)">
+              <span>Ítems seleccionados <b id="kSel">&mdash;</b></span>
+              <span>Semilla <b id="kSeed">&mdash;</b></span>
+              <span>Generada <b id="kWhen">&mdash;</b></span>
+            </div>
+            <div class="tbl-scroll"><table class="data" id="sampleTbl"></table></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<footer class="foot">
+  <strong>Alcance</strong>
+  <ul>
+    <li><b>Atributos (ISO 2859-1):</b> planes de muestreo simple, Tablas 1, 2-A, 2-B y 2-C, niveles generales I, II y III, AQL 1,0 / 4,0 / 10 % de no conformes. No incluye planes dobles ni múltiples, niveles S-1 a S-4, ni números de aceptación fraccionarios del numeral 13.</li>
+    <li><b>Variables (ISO 3951-1):</b> planes simples de forma k, métodos "s" y "σ", <b>límite de especificación único</b>. No incluye el control combinado de límites dobles ni la incertidumbre de medición del Anexo O.</li>
+    <li>Aplique 3951-1 solo si la característica es continua, se evalúa una sola magnitud y su distribución es <b>normal</b> o próxima a normal (numeral 15.a). Si la característica es conforme / no conforme, corresponde 2859-1.</li>
+    <li>Las <b>reglas de cambio</b> de severidad no se automatizan: la severidad se elige y se sustenta con el historial de lotes.</li>
+  </ul>
+  <div class="selftest" id="selftest"></div>
+</footer>
+</main>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const nf = (x,d=3) => Number(x).toLocaleString("es-EC",{minimumFractionDigits:d,maximumFractionDigits:d});
+
+/* ===================================================================
+   1. TABLAS NORMATIVAS
+   =================================================================== */
+const LETRAS = ["A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R"];
+
+/* Tabla 1 de ISO 2859-1. La Tabla A.1 de ISO 3951-1 usa los mismos rangos y letras:
+   verificado contra los ejemplos resueltos de 3951-1 (lote 100 -> F, 1000 -> J,
+   500 -> H, 25 -> C, 100 en nivel S-2 -> B). El ejemplo del numeral 16.4.4
+   (lote 96 -> E) es la unica discrepancia y corresponde a una errata de traduccion. */
+const RANGOS = [
+  [2,8],[9,15],[16,25],[26,50],[51,90],[91,150],[151,280],[281,500],
+  [501,1200],[1201,3200],[3201,10000],[10001,35000],[35001,150000],
+  [150001,500000],[500001,Infinity]
+];
+const TABLA1 = {
+  I:  ["A","A","B","C","C","D","E","F","G","H","J","K","L","M","N"],
+  II: ["A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q"],
+  III:["B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R"]
+};
+
+const NMUESTRA = {
+  normal:   {A:2,B:3,C:5,D:8,E:13,F:20,G:32,H:50,J:80,K:125,L:200,M:315,N:500,P:800,Q:1250,R:2000},
+  estricta: {A:2,B:3,C:5,D:8,E:13,F:20,G:32,H:50,J:80,K:125,L:200,M:315,N:500,P:800,Q:1250,R:2000},
+  reducida: {A:2,B:2,C:2,D:3,E:5,F:8,G:13,H:20,J:32,K:50,L:80,M:125,N:200,P:315,Q:500,R:800}
+};
+/* Tablas 2-A / 2-B / 2-C, columnas AQL 1,0 / 4,0 / 10.
+   "v" = flecha abajo, "^" = flecha arriba, [Ac, Re] = plan. Orden = LETRAS. */
+const PLANES = {
+  normal: {
+    "1.0": ["v","v","v","v",[0,1],"^","v",[1,2],[2,3],[3,4],[5,6],[7,8],[10,11],[14,15],[21,22],"^"],
+    "4.0": ["v",[0,1],"^","v",[1,2],[2,3],[3,4],[5,6],[7,8],[10,11],[14,15],[21,22],"^","^","^","^"],
+    "10":  ["v",[1,2],[2,3],[3,4],[5,6],[7,8],[10,11],[14,15],[21,22],"^","^","^","^","^","^","^"]
+  },
+  estricta: {
+    "1.0": ["v","v","v","v","v",[0,1],"v","v",[1,2],[2,3],[3,4],[5,6],[8,9],[12,13],[18,19],"^"],
+    "4.0": ["v","v",[0,1],"v","v",[1,2],[2,3],[3,4],[5,6],[8,9],[12,13],[18,19],"^","^","^","^"],
+    "10":  [[0,1],"v","v",[1,2],[2,3],[3,4],[5,6],[8,9],[12,13],[18,19],"^","^","^","^","^","^"]
+  },
+  reducida: {
+    "1.0": ["v","v","v","v",[0,1],"^","v","v",[1,2],[2,3],[3,4],[5,6],[6,7],[8,9],[10,11],"^"],
+    "4.0": ["v",[0,1],"^","v","v",[1,2],[2,3],[3,4],[5,6],[6,7],[8,9],[10,11],"^","^","^","^"],
+    "10":  ["v","v","v",[1,2],[2,3],[3,4],[5,6],[6,7],[8,9],[10,11],"^","^","^","^","^","^"]
+  }
+};
+
+/* -------------------------------------------------------------------
+   ISO 3951-1 - Tablas B.1/B.2/B.3 (metodo "s") y C.1/C.2/C.3 (metodo "sigma").
+   Cada celda: null = no cargada, "v"/"^" = flecha, [n, k] = plan.
+
+   PENDIENTE DE TRANSCRIPCION: paginas 59 a 64 de la NTE INEN-ISO 3951-1.
+   Mientras las celdas esten en null, la herramienta EXIGE el ingreso manual
+   de n y k. No se inventan constantes: un k erroneo produce un dictamen
+   plausible y equivocado sobre un lote real.
+------------------------------------------------------------------- */
+const vacia = () => Object.fromEntries(LETRAS.map(L=>[L,null]));
+const TAB3951 = {
+  s:     { normal:{"1.0":vacia(),"4.0":vacia(),"10":vacia()},
+           estricta:{"1.0":vacia(),"4.0":vacia(),"10":vacia()},
+           reducida:{"1.0":vacia(),"4.0":vacia(),"10":vacia()} },
+  sigma: { normal:{"1.0":vacia(),"4.0":vacia(),"10":vacia()},
+           estricta:{"1.0":vacia(),"4.0":vacia(),"10":vacia()},
+           reducida:{"1.0":vacia(),"4.0":vacia(),"10":vacia()} }
+};
+
+const SEV_LABEL = {normal:"Normal", estricta:"Estricta", reducida:"Reducida"};
+const AQL_LABEL = {"1.0":"1,0 %", "4.0":"4,0 %", "10":"10 %"};
+const TAB_NUM   = {normal:"1", estricta:"2", reducida:"3"};
+
+/* ===================================================================
+   2. RESOLUCION DE PLANES
+   =================================================================== */
+function letraCodigo(N, nivel){
+  if(!(N >= 2)) return null;
+  for(let i=0;i<RANGOS.length;i++) if(N >= RANGOS[i][0] && N <= RANGOS[i][1]) return TABLA1[nivel][i];
+  return null;
+}
+function resolverAtributos(N, nivel, sev, aql){
+  const letra = letraCodigo(N, nivel);
+  if(!letra) return {error:"El tamaño del lote debe ser 2 o mayor."};
+  const col = PLANES[sev][aql];
+  const idx = LETRAS.indexOf(letra);
+  let usada = idx, flecha = null;
+  if(col[idx] === "v"){ flecha = "abajo"; while(usada < col.length && col[usada] === "v") usada++; }
+  else if(col[idx] === "^"){ flecha = "arriba"; while(usada >= 0 && col[usada] === "^") usada--; }
+  if(usada < 0 || usada >= col.length || typeof col[usada] === "string")
+    return {error:"No hay plan disponible en esta combinación."};
+  const letraUsada = LETRAS[usada];
+  const n = NMUESTRA[sev][letraUsada];
+  return {letra, letraUsada, idxOrig:idx, idxUsada:usada, flecha, n,
+          ac:col[usada][0], re:col[usada][1], cien:n>=N, nUsable:Math.min(n,N)};
+}
+function resolverVariables(N, nivel, sev, aql, met){
+  const letra = letraCodigo(N, nivel);
+  if(!letra) return {error:"El tamaño del lote debe ser 2 o mayor."};
+  const col = TAB3951[met][sev][aql];
+  const idx = LETRAS.indexOf(letra);
+  let usada = idx, flecha = null;
+  while(usada < 16 && col[LETRAS[usada]] === "v"){ flecha = "abajo"; usada++; }
+  while(usada >= 0 && col[LETRAS[usada]] === "^"){ flecha = "arriba"; usada--; }
+  const seguro = Math.max(0, Math.min(15, usada));
+  const cel = col[LETRAS[seguro]];
+  if(!Array.isArray(cel))
+    return {letra, letraUsada:LETRAS[seguro], idxOrig:idx, idxUsada:seguro, flecha, pendiente:true};
+  return {letra, letraUsada:LETRAS[seguro], idxOrig:idx, idxUsada:seguro, flecha,
+          n:cel[0], k:cel[1]};
+}
+
+/* ===================================================================
+   3. ESTADO Y CONTROLES
+   =================================================================== */
+const state = {
+  modo:"atr", origen:"manual", nivel:"II", sev:"normal", aql:"4.0",
+  metvar:"s", limite:"U", origNk:"manual",
+  N:1200, plan:null,
+  fileName:"", sheet:"", headers:[], rows:[], muestra:null, alloc:null,
+  seedUsada:"", cuando:"", estratoCol:0, med:null
+};
+
+function segInit(id, key, cb){
+  const el = $(id);
+  el.addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    [...el.querySelectorAll("button")].forEach(x=>x.setAttribute("aria-pressed", String(x===b)));
+    state[key] = b.dataset.v; cb && cb();
+  });
+}
+segInit("seg-nivel","nivel",render);
+segInit("seg-sev","sev",render);
+segInit("seg-aql","aql",render);
+segInit("seg-origen","origen",()=>{ syncOrigen(); render(); });
+segInit("seg-metvar","metvar",()=>{
+  const sig = state.metvar === "sigma";
+  $("fld-sigma").style.display = sig ? "block" : "none";
+  $("metvarHint").textContent = sig
+    ? "Desviación estándar del proceso conocida y constante."
+    : "Desviación estándar del proceso desconocida: se estima con la muestra.";
+  render();
+});
+segInit("seg-limite","limite",()=>{ $("limLb").textContent = "Valor del límite " + state.limite; render(); });
+segInit("seg-orig-nk","origNk",()=>{
+  $("nkManual").style.display = state.origNk === "manual" ? "block" : "none";
+  render();
+});
+["limVal","sigmaVal","nMan","kMan","medIn"].forEach(id=>$(id).addEventListener("input", render));
+$("lotSize").addEventListener("input", ()=>{ if(state.origen==="manual") render(); });
+$("dFound").addEventListener("input", pintarVeredictoAtr);
+
+function setModo(m){
+  state.modo = m;
+  $("tab-atr").setAttribute("aria-selected", String(m==="atr"));
+  $("tab-var").setAttribute("aria-selected", String(m==="var"));
+  $("parTag").textContent = m==="atr" ? "Atributos" : "Variables";
+  $("varParams").classList.toggle("hidden", m!=="var");
+  $("dBox").classList.toggle("hidden", m!=="atr");
+  $("mBox").classList.toggle("hidden", m!=="var");
+  $("masterCard").classList.toggle("hidden", m!=="atr");
+  $("chartCard").classList.toggle("hidden", m!=="var");
+  render();
+}
+$("tab-atr").addEventListener("click", ()=>setModo("atr"));
+$("tab-var").addEventListener("click", ()=>setModo("var"));
+
+function syncOrigen(){
+  const manual = state.origen === "manual";
+  $("lotSize").disabled = !manual;
+  $("lotHint").textContent = manual
+    ? "Cantidad de ítems que componen el lote."
+    : "Se toma de las filas de datos del archivo cargado.";
+  if(!manual && state.rows.length) $("lotSize").value = state.rows.length;
+}
+
+/* ===================================================================
+   4. RENDER
+   =================================================================== */
+function nota(tipo, ic, html){
+  const d = document.createElement("div");
+  d.className = "note" + (tipo==="warn"?" warn":tipo==="stop"?" stop":"");
+  d.innerHTML = `<span class="ic">${ic}</span><span>${html}</span>`;
+  return d;
+}
+function celdas(items){
+  $("planCells").innerHTML = items.map(it =>
+    `<div class="cell"><div class="k">${it[0]}</div><div class="v">${it[1]}</div></div>`).join("");
+}
+function render(){
+  state.N = (state.origen === "archivo" && state.rows.length) ? state.rows.length
+          : parseInt($("lotSize").value, 10);
+  if(state.origen === "archivo" && state.rows.length) $("lotSize").value = state.N;
+  $("notes").innerHTML = "";
+  if(state.modo === "atr") renderAtributos(); else renderVariables();
+}
+
+function renderAtributos(){
+  const p = resolverAtributos(state.N, state.nivel, state.sev, state.aql);
+  state.plan = p.error ? null : p;
+  $("planTag").textContent = `Nivel ${state.nivel} · ${SEV_LABEL[state.sev]} · AQL ${AQL_LABEL[state.aql]}`;
+  $("tabTag").textContent = `AQL ${AQL_LABEL[state.aql]} · Inspección ${SEV_LABEL[state.sev].toLowerCase()}`;
+  const notes = $("notes");
+
+  if(p.error){
+    celdas([["Letra código","—"],["Muestra (n)","—"],["Aceptación (Ac)","—"],["Rechazo (Re)","—"]]);
+    $("regla").textContent = "";
+    notes.appendChild(nota("stop","!", p.error));
+    pintarMaestra(null); pintarVeredictoAtr(); $("genBtn").disabled = true; return;
+  }
+  celdas([
+    ["Letra código", p.letraUsada + (p.letraUsada!==p.letra ? ` <small>← ${p.letra}</small>` : "")],
+    ["Muestra (n)", p.n], ["Aceptación (Ac)", p.ac], ["Rechazo (Re)", p.re]
+  ]);
+  $("regla").innerHTML = `Inspeccione <b>${p.nUsable}</b> ítems tomados al azar del lote de <b>${state.N}</b>. `+
+    `Con <b>${p.ac}</b> o menos ítems no conformes el lote se acepta; con <b>${p.re}</b> o más, no se acepta.`;
+  if(p.flecha) notes.appendChild(nota("warn", p.flecha==="abajo"?"↓":"↑",
+    `La celda de la letra <b>${p.letra}</b> tiene flecha hacia ${p.flecha}: se usa el primer plan `+
+    `${p.flecha==="abajo"?"por debajo":"por encima"}, letra <b>${p.letraUsada}</b>, con su propio tamaño de muestra (n = ${p.n}).`));
+  if(p.cien) notes.appendChild(nota("stop","100 %",
+    `El tamaño de muestra (${p.n}) iguala o supera el lote (${state.N}): corresponde <b>inspección al 100 %</b>, con los mismos Ac = ${p.ac} y Re = ${p.re}.`));
+  if(state.sev === "reducida") notes.appendChild(nota("info","i",
+    `La inspección reducida solo procede con puntuación de cambio ≥ 30, producción estable y visto bueno de la autoridad responsable (numeral 9.3.3).`));
+  pintarMaestra(p); pintarVeredictoAtr();
+  $("genBtn").disabled = !state.rows.length;
+}
+
+function renderVariables(){
+  const met = state.metvar;
+  const r = resolverVariables(state.N, state.nivel, state.sev, state.aql, met);
+  const notes = $("notes");
+  $("planTag").textContent = `Nivel ${state.nivel} · ${SEV_LABEL[state.sev]} · AQL ${AQL_LABEL[state.aql]} · método "${met==="s"?"s":"σ"}"`;
+
+  if(r.error){
+    celdas([["Letra código","—"],["Muestra (n)","—"],["Constante k","—"],["Criterio","—"]]);
+    notes.appendChild(nota("stop","!", r.error));
+    state.plan = null; $("genBtn").disabled = true; calcularVariables(); return;
+  }
+
+  let n = NaN, k = NaN, fuente = "";
+  if(state.origNk === "manual"){
+    n = parseInt($("nMan").value,10); k = parseFloat($("kMan").value);
+    fuente = "ingreso manual desde la tabla impresa";
+    if(!(n>=2) || !isFinite(k)) notes.appendChild(nota("warn","n k",
+      `Tome <b>n</b> y <b>k</b> de la Tabla <b>${met==="s"?"B":"C"}.${TAB_NUM[state.sev]}</b> impresa, `+
+      `fila de la letra código <b>${r.letra}</b>, columna AQL ${AQL_LABEL[state.aql]}. `+
+      `Si esa celda tiene flecha, use la letra que indica la flecha con su propio n.`));
+  } else if(r.pendiente){
+    notes.appendChild(nota("stop","—",
+      `Las Tablas B y C de la ISO 3951-1 (páginas 58 a 64) todavía no están cargadas en esta herramienta. `+
+      `Use el <b>ingreso manual</b> de n y k mientras tanto: el resto del cálculo ya está verificado contra los ejemplos de la norma.`));
+  } else { n = r.n; k = r.k; fuente = `Tabla ${met==="s"?"B":"C"}.${TAB_NUM[state.sev]}`; }
+
+  const lim = parseFloat($("limVal").value);
+  const sigma = parseFloat($("sigmaVal").value);
+  const esU = state.limite === "U";
+  const valido = (n>=2) && isFinite(k);
+
+  let acepVal = null;
+  if(met === "sigma" && valido && isFinite(lim) && isFinite(sigma))
+    acepVal = esU ? lim - k*sigma : lim + k*sigma;
+
+  celdas([
+    ["Letra código", r.letraUsada + (r.letraUsada!==r.letra ? ` <small>← ${r.letra}</small>` : "")],
+    ["Muestra (n)", valido ? n : "—"],
+    ["Constante k", valido ? nf(k,3) : "—"],
+    [met==="sigma" ? (esU ? "Aceptar si x̄ ≤" : "Aceptar si x̄ ≥") : "Criterio",
+     met==="sigma" ? (acepVal!==null ? nf(acepVal,3) : "—") : (valido ? `Q ≥ ${nf(k,3)}` : "—")]
+  ]);
+
+  const nUsable = valido ? Math.min(n, state.N) : null;
+  state.plan = valido ? {n, k, nUsable, letra:r.letra, letraUsada:r.letraUsada, flecha:r.flecha,
+                         met, limite:state.limite, lim, sigma, fuente, cien:n>=state.N} : null;
+
+  if(nUsable){
+    $("regla").innerHTML = met==="s"
+      ? `Mida la característica en <b>${nUsable}</b> ítems tomados al azar del lote de <b>${state.N}</b>, calcule la media x̄ y la desviación estándar s de la muestra, `+
+        `y compare Q = ${esU?"(U − x̄) ⁄ s":"(x̄ − L) ⁄ s"} contra k. El lote se acepta si <b>Q ≥ k</b>.`
+      : `Mida la característica en <b>${nUsable}</b> ítems tomados al azar del lote de <b>${state.N}</b> y compare la media x̄ contra el valor de aceptación `+
+        `${esU?"x̄ = U − kσ":"x̄ = L + kσ"}, que puede calcularse antes de iniciar la inspección.`;
+  } else $("regla").textContent = "";
+
+  if(r.flecha) notes.appendChild(nota("warn", r.flecha==="abajo"?"↓":"↑",
+    `La celda de la letra <b>${r.letra}</b> tiene flecha hacia ${r.flecha}: use la letra <b>${r.letraUsada}</b> con su propio n.`));
+  if(state.plan && state.plan.cien) notes.appendChild(nota("stop","100 %",
+    `El tamaño de muestra (${n}) iguala o supera el lote (${state.N}).`));
+  if(met === "sigma") notes.appendChild(nota("info","σ",
+    `El método "σ" exige evidencia válida de que la desviación estándar del proceso es constante y conocida (numeral 17.1). Mantenga gráfico de control de s para verificarlo.`));
+  notes.appendChild(nota("info","N",
+    `ISO 3951-1 requiere que la característica se distribuya de forma normal o próxima a normal (numeral 15.a). Si no lo es, el riesgo real difiere del nominal y corresponde inspección por atributos.`));
+
+  calcularVariables();
+  $("genBtn").disabled = !(state.rows.length && state.plan);
+}
+
+function pintarMaestra(p){
+  const col = PLANES[state.sev][state.aql], nm = NMUESTRA[state.sev];
+  let html = `<thead><tr><th>Letra</th><th>n</th><th>Ac</th><th>Re</th><th>&nbsp;</th></tr></thead><tbody>`;
+  LETRAS.forEach((L,i)=>{
+    const c = col[i];
+    let ac, re, cls = "", marca = "";
+    if(c === "v"){ ac = re = "↓"; cls = "arrow"; marca = "usar el primer plan de abajo"; }
+    else if(c === "^"){ ac = re = "↑"; cls = "arrow"; marca = "usar el primer plan de arriba"; }
+    else { ac = c[0]; re = c[1]; }
+    const tr = p ? (i===p.idxUsada ? "usado" : i===p.idxOrig ? "origen" : "") : "";
+    html += `<tr class="${tr}"><td>${L}</td><td>${nm[L]}</td><td class="${cls}">${ac}</td><td class="${cls}">${re}</td>`+
+            `<td class="arrow" style="font-size:11px">${p&&i===p.idxUsada?"plan aplicado":p&&i===p.idxOrig?"letra del lote":marca}</td></tr>`;
+  });
+  $("master").innerHTML = html + "</tbody>";
+}
+
+function pintarVeredictoAtr(){
+  const v = $("veredicto"), d = parseInt($("dFound").value,10);
+  if(state.modo!=="atr" || !state.plan || isNaN(d) || d<0){ v.className="verdict mid"; v.textContent="Ingrese d"; return; }
+  if(d <= state.plan.ac){ v.className="verdict ok"; v.textContent = `Lote aceptado · d = ${d} ≤ Ac = ${state.plan.ac}`; }
+  else { v.className="verdict no"; v.textContent = `Lote no aceptado · d = ${d} ≥ Re = ${state.plan.re}`; }
+}
+
+/* ===================================================================
+   5. ESTADISTICA DE VARIABLES
+   =================================================================== */
+function parseNums(txt){
+  return String(txt).split(/[\s,;]+/).map(t=>t.replace(",", ".")).filter(t=>t!=="")
+         .map(Number).filter(x=>isFinite(x));
+}
+function media(a){ return a.reduce((x,y)=>x+y,0)/a.length; }
+function desvStd(a){ const m=media(a); return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)); }
+function sesgo(a){
+  const n=a.length, m=media(a), s=desvStd(a);
+  if(n<3 || s===0) return null;
+  return (n/((n-1)*(n-2))) * a.reduce((t,x)=>t+((x-m)/s)**3, 0);
+}
+
+function calcularVariables(){
+  if(state.modo !== "var") return;
+  const vd = $("veredictoV"), sb = $("statBox"), db = $("diagBox");
+  const x = parseNums($("medIn").value);
+  state.med = x; db.innerHTML = "";
+  const p = state.plan;
+
+  if(!p){ sb.innerHTML=""; vd.className="verdict mid"; vd.textContent="Defina primero n y k"; pintarChart(null); return; }
+  const esU = p.limite === "U";
+  const stats = [];
+  if(x.length >= 2){
+    stats.push(["n medido", x.length], ["Media x̄", nf(media(x),4)], ["s de la muestra", nf(desvStd(x),4)]);
+  }
+  if(p.met === "sigma") stats.push(["σ supuesta", isFinite(p.sigma)?nf(p.sigma,4):"—"]);
+
+  const pintaStats = extra => {
+    sb.innerHTML = stats.concat(extra||[]).map(s=>`<div><div class="k">${s[0]}</div><div class="v">${s[1]}</div></div>`).join("");
+  };
+
+  if(!isFinite(p.lim)){ pintaStats(); vd.className="verdict mid"; vd.textContent=`Ingrese el valor del límite ${p.limite}`; pintarChart(null); return; }
+  if(p.met === "sigma" && !isFinite(p.sigma)){ pintaStats(); vd.className="verdict mid"; vd.textContent="Ingrese σ"; pintarChart(null); return; }
+  if(x.length < 2){ pintaStats(); vd.className="verdict mid"; vd.textContent="Ingrese las mediciones"; pintarChart(null); return; }
+
+  const m = media(x), sMuestra = desvStd(x);
+  const disp = p.met === "s" ? sMuestra : p.sigma;
+  if(!(disp > 0)){ pintaStats(); vd.className="verdict mid"; vd.textContent="La dispersión es cero: no se puede calcular Q"; pintarChart(null); return; }
+
+  const Q = esU ? (p.lim - m)/disp : (m - p.lim)/disp;
+  pintaStats([[`Q${p.limite}`, nf(Q,3)], ["k", nf(p.k,3)]]);
+
+  const acepta = Q >= p.k;
+  vd.className = "verdict " + (acepta ? "ok" : "no");
+  vd.textContent = acepta ? `Lote aceptado · Q = ${nf(Q,3)} ≥ k = ${nf(p.k,3)}`
+                          : `Lote no aceptado · Q = ${nf(Q,3)} < k = ${nf(p.k,3)}`;
+
+  if(x.length !== p.nUsable) db.appendChild(nota("warn","≠",
+    `Ingresó <b>${x.length}</b> mediciones y el plan pide <b>${p.nUsable}</b>. El dictamen solo es válido con el tamaño de muestra del plan.`));
+  const fuera = x.filter(v => Math.abs(v-m) > 3*sMuestra);
+  if(fuera.length) db.appendChild(nota("warn","!",
+    `${fuera.length} valor(es) a más de 3 s de la media (${fuera.map(v=>nf(v,3)).join("; ")}). Un dato atípico infla s y puede provocar el rechazo del lote aun estando dentro de especificación (numeral 19.2).`));
+  const g1 = sesgo(x);
+  if(g1 !== null && Math.abs(g1) > 1) db.appendChild(nota("warn","g1",
+    `Asimetría muestral g₁ = ${nf(g1,2)}: los datos se alejan de la normalidad. Verifique el supuesto (ISO 5479) antes de sostener el dictamen.`));
+
+  pintarChart({m, s:sMuestra, disp, acepta});
+}
+
+/* gráfico de aceptación (numeral 16.3) */
+function pintarChart(d){
+  const box = $("chartBox"), p = state.plan;
+  if(!p || !isFinite(p.lim) || !isFinite(p.k)){
+    box.innerHTML = `<p class="hint">Defina el plan y el límite de especificación para ver la zona de aceptación.</p>`; return;
+  }
+  const esU = p.limite === "U", k = p.k, lim = p.lim;
+  const sMax = d ? Math.max(d.disp, 1e-9)*2 : Math.abs(lim)*0.2 || 1;
+  const yEnd = esU ? lim - k*sMax : lim + k*sMax;
+  let yLo = Math.min(lim, yEnd), yHi = Math.max(lim, yEnd);
+  if(d){ yLo = Math.min(yLo, d.m); yHi = Math.max(yHi, d.m); }
+  const pad = (yHi-yLo)*0.08 || 1; yLo -= pad; yHi += pad;
+
+  const W=560,H=330,ml=68,mr=18,mt=18,mb=44;
+  const px = s => ml + (s/sMax)*(W-ml-mr);
+  const py = y => mt + (1-(y-yLo)/(yHi-yLo))*(H-mt-mb);
+  const x0=px(0), y0=py(lim), x1=px(sMax), y1=py(yEnd);
+  const zona = esU ? `${x0},${py(yLo)} ${x0},${y0} ${x1},${y1} ${x1},${py(yLo)}`
+                   : `${x0},${py(yHi)} ${x0},${y0} ${x1},${y1} ${x1},${py(yHi)}`;
+  const tY = [0,.25,.5,.75,1].map(t=>yLo+t*(yHi-yLo));
+  const tX = [0,.25,.5,.75,1].map(t=>t*sMax);
+  const etY = esU ? yLo+(lim-yLo)*0.35 : yHi-(yHi-lim)*0.35;
+
+  box.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Zona de aceptación del plan por variables">
+    <polygon points="${zona}" fill="var(--green-soft)"/>
+    ${tY.map(v=>`<line x1="${ml}" y1="${py(v)}" x2="${W-mr}" y2="${py(v)}" stroke="var(--rule2)"/><text x="${ml-8}" y="${py(v)+4}" text-anchor="end" font-size="10" fill="var(--ink2)">${nf(v,2)}</text>`).join("")}
+    ${tX.map(v=>`<text x="${px(v)}" y="${H-mb+16}" text-anchor="middle" font-size="10" fill="var(--ink2)">${nf(v,2)}</text>`).join("")}
+    <line x1="${ml}" y1="${mt}" x2="${ml}" y2="${H-mb}" stroke="var(--rule)"/>
+    <line x1="${ml}" y1="${H-mb}" x2="${W-mr}" y2="${H-mb}" stroke="var(--rule)"/>
+    <line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="var(--green)" stroke-width="2"/>
+    <text x="${W-mr}" y="${H-6}" text-anchor="end" font-size="10" fill="var(--ink2)">${p.met==="sigma"?"σ":"s"}</text>
+    <text x="8" y="${mt+10}" font-size="11" fill="var(--ink2)">x̄</text>
+    <text x="${px(sMax*0.5)}" y="${py(etY)}" text-anchor="middle" font-size="11" fill="var(--green)" font-weight="600">ZONA DE ACEPTACIÓN</text>
+    <text x="${ml+6}" y="${y0-6}" font-size="10" fill="var(--ink2)">${p.limite} = ${nf(lim,2)}</text>
+    ${d ? `<line x1="${px(d.disp)}" y1="${H-mb}" x2="${px(d.disp)}" y2="${py(d.m)}" stroke="var(--ink3)" stroke-dasharray="3 3"/>
+      <line x1="${ml}" y1="${py(d.m)}" x2="${px(d.disp)}" y2="${py(d.m)}" stroke="var(--ink3)" stroke-dasharray="3 3"/>
+      <circle cx="${px(d.disp)}" cy="${py(d.m)}" r="5" fill="${d.acepta?"var(--green)":"var(--red)"}"/>
+      <text x="${px(d.disp)+9}" y="${py(d.m)-9}" font-size="11" fill="var(--ink)">(${nf(d.disp,2)} ; ${nf(d.m,2)})</text>` : ""}
+  </svg>`;
+  $("chartTag").textContent = `x̄ = ${p.limite} ${p.limite==="U"?"−":"+"} k·${p.met==="sigma"?"σ":"s"} · numeral 16.3`;
+}
+
+/* ===================================================================
+   6. ARCHIVO
+   =================================================================== */
+const drop = $("drop");
+$("pickBtn").addEventListener("click", ()=> $("file").click());
+$("file").addEventListener("change", e=>{ if(e.target.files[0]) cargar(e.target.files[0]); });
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault();drop.classList.add("over");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault();drop.classList.remove("over");}));
+drop.addEventListener("drop", e=>{ const f=e.dataTransfer.files[0]; if(f) cargar(f); });
+function error(msg){ $("fileMsg").innerHTML = msg ? `<div class="msg">${msg}</div>` : ""; }
+
+function cargar(file){
+  error(""); state.fileName = file.name;
+  const ext = (file.name.split(".").pop()||"").toLowerCase();
+  const fr = new FileReader();
+  if(ext === "csv" || ext === "txt"){
+    fr.onload = () => { try{ llenarHojas(["Datos"], {"Datos": parseCSV(fr.result)}); }
+                        catch(err){ error("No se pudo leer el CSV: " + err.message); } };
+    fr.readAsText(file, "UTF-8");
+  } else {
+    if(typeof XLSX === "undefined"){
+      error("No se cargó la librería de lectura de Excel. Guarde <code>xlsx.full.min.js</code> junto a esta página o use archivos .csv."); return;
+    }
+    fr.onload = () => {
+      try{
+        const wb = XLSX.read(new Uint8Array(fr.result), {type:"array"});
+        const mats = {};
+        wb.SheetNames.forEach(n=> mats[n] = XLSX.utils.sheet_to_json(wb.Sheets[n], {header:1, raw:false, defval:""}));
+        llenarHojas(wb.SheetNames, mats);
+      }catch(err){ error("No se pudo leer el archivo: " + err.message); }
+    };
+    fr.readAsArrayBuffer(file);
+  }
+}
+function parseCSV(txt){
+  txt = txt.replace(/^\uFEFF/, "");
+  const first = txt.split(/\r?\n/)[0] || "";
+  const del = first.split(";").length > first.split(",").length ? ";" : ",";
+  const out=[]; let row=[], cell="", q=false;
+  for(let i=0;i<txt.length;i++){
+    const c=txt[i];
+    if(q){ if(c==='"'){ if(txt[i+1]==='"'){cell+='"';i++;} else q=false; } else cell+=c; }
+    else if(c==='"') q=true;
+    else if(c===del){ row.push(cell); cell=""; }
+    else if(c==="\n"){ row.push(cell); out.push(row); row=[]; cell=""; }
+    else if(c!=="\r") cell+=c;
+  }
+  if(cell.length||row.length){ row.push(cell); out.push(row); }
+  return out;
+}
+const MATS = {};
+function llenarHojas(nombres, mats){
+  Object.keys(MATS).forEach(k=>delete MATS[k]);
+  nombres.forEach(n=> MATS[n]=mats[n]);
+  const sel = $("sheetSel");
+  sel.innerHTML = nombres.map(n=>`<option>${esc(n)}</option>`).join("");
+  sel.onchange = ()=> usarHoja(sel.value);
+  $("fileBox").classList.remove("hidden");
+  $("kFile").textContent = state.fileName;
+  usarHoja(nombres[0]);
+}
+function usarHoja(nombre){
+  const m = (MATS[nombre]||[]).filter(r=>r.some(c=>String(c).trim()!==""));
+  if(m.length < 2){ error("La hoja no tiene encabezados y al menos una fila de datos.");
+    state.headers=[]; state.rows=[]; render(); return; }
+  error(""); state.sheet = nombre;
+  state.headers = m[0].map((h,i)=> String(h).trim() || `Columna ${i+1}`);
+  state.rows = m.slice(1).map((r,i)=>({fila:i+2, valores: state.headers.map((_,j)=>String(r[j] ?? ""))}));
+  $("kRows").textContent = state.rows.length;
+  $("kCols").textContent = state.headers.length;
+  const opts = state.headers.map((h,i)=>`<option value="${i}">${esc(h)}</option>`).join("");
+  $("estratoCol").innerHTML = opts;
+  $("medCol").innerHTML = `<option value="-1">Columna de la medición…</option>` + opts;
+  if(state.origen === "manual"){
+    [...$("seg-origen").querySelectorAll("button")].forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v==="archivo")));
+    state.origen = "archivo"; syncOrigen();
+  }
+  state.muestra=null; state.alloc=null;
+  $("sampleBox").classList.add("hidden"); $("allocBox").classList.add("hidden");
+  $("csvBtn").disabled=true; $("xlsxBtn").disabled=true; $("medColBtn").disabled=true;
+  render();
+}
+$("metodo").addEventListener("change", ()=>{
+  const es = $("metodo").value === "estrat";
+  $("fld-estrato").classList.toggle("hidden", !es);
+  $("fld-min1").classList.toggle("hidden", !es);
+});
+$("fld-estrato").classList.add("hidden");
+$("fld-min1").classList.add("hidden");
+
+/* ===================================================================
+   7. MUESTREO ALEATORIO
+   =================================================================== */
+function hash32(str){ let h=2166136261>>>0;
+  for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return h>>>0; }
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0;
+  let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t;
+  return ((t^t>>>14)>>>0)/4294967296; }; }
+function tomar(idxs, k, rnd){
+  const a = idxs.slice(), m = Math.min(k, a.length);
+  for(let i=0;i<m;i++){ const j=i+Math.floor(rnd()*(a.length-i)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a.slice(0,m);
+}
+$("genBtn").addEventListener("click", generar);
+
+function generar(){
+  if(!state.plan || !state.rows.length) return;
+  error("");
+  const n = state.plan.nUsable;
+  const semilla = $("seed").value.trim() || "sin-semilla";
+  const rnd = mulberry32(hash32(semilla+"|"+state.sheet+"|"+n+"|"+state.modo));
+  let elegidos=[], alloc=null;
+
+  if($("metodo").value === "simple"){
+    elegidos = tomar(state.rows.map((_,i)=>i), n, rnd).sort((a,b)=>a-b);
+  } else {
+    const col = parseInt($("estratoCol").value,10);
+    const grupos = new Map();
+    state.rows.forEach((r,i)=>{
+      const key = (r.valores[col]||"").trim() || "(sin dato)";
+      if(!grupos.has(key)) grupos.set(key,[]);
+      grupos.get(key).push(i);
+    });
+    const claves = [...grupos.keys()].sort((a,b)=>a.localeCompare(b,"es"));
+    const N = state.rows.length, min1 = $("min1").checked;
+    if(min1 && claves.length > n){
+      error(`Hay ${claves.length} estratos y la muestra es de ${n} ítems: no alcanza para asignar 1 por estrato. Desactive esa opción o agrupe estratos.`); return;
+    }
+    const base = claves.map(k=> grupos.get(k).length*n/N);
+    let asign = base.map(v=>Math.floor(v));
+    if(min1) asign = asign.map(v=>Math.max(1,v));
+    let faltan = n - asign.reduce((a,b)=>a+b,0);
+    const orden = claves.map((k,i)=>({i,res:base[i]-Math.floor(base[i])})).sort((a,b)=>b.res-a.res||a.i-b.i);
+    let t=0;
+    while(faltan>0 && orden.length){
+      const i = orden[t%orden.length].i;
+      if(asign[i] < grupos.get(claves[i]).length){ asign[i]++; faltan--; }
+      t++; if(t>orden.length*1000) break;
+    }
+    while(faltan<0){
+      const i = claves.map((k,j)=>({j,a:asign[j]})).sort((a,b)=>b.a-a.a)[0].j;
+      if(asign[i] > (min1?1:0)){ asign[i]--; faltan++; } else break;
+    }
+    alloc = [];
+    claves.forEach((k,i)=>{
+      const idxs = grupos.get(k), sel = tomar(idxs, asign[i], rnd);
+      elegidos = elegidos.concat(sel);
+      alloc.push({estrato:k, Nh:idxs.length, prop:idxs.length/N*100, nh:sel.length});
+    });
+    elegidos.sort((a,b)=>a-b);
+    state.estratoCol = col;
+  }
+  state.muestra = elegidos; state.alloc = alloc;
+  state.seedUsada = semilla; state.cuando = new Date().toLocaleString("es-EC");
+  pintarMuestra();
+}
+
+function pintarMuestra(){
+  if(state.alloc){
+    let h = `<thead><tr><th>Estrato</th><th>N del estrato</th><th>% del universo</th><th>Muestra asignada</th></tr></thead><tbody>`;
+    state.alloc.forEach(a=> h += `<tr><td>${esc(a.estrato)}</td><td>${a.Nh}</td><td>${a.prop.toFixed(2)} %</td><td>${a.nh}</td></tr>`);
+    $("allocTbl").innerHTML = h+"</tbody>"; $("allocBox").classList.remove("hidden");
+  } else $("allocBox").classList.add("hidden");
+
+  const cols = ["N° fila", ...state.headers];
+  let h = `<thead><tr><th>#</th>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>`;
+  state.muestra.forEach((idx,k)=>{
+    const r = state.rows[idx];
+    h += `<tr><td>${k+1}</td><td>${r.fila}</td>${r.valores.map(v=>`<td>${esc(v)}</td>`).join("")}</tr>`;
+  });
+  $("sampleTbl").innerHTML = h+"</tbody>";
+  $("kSel").textContent = state.muestra.length;
+  $("kSeed").textContent = state.seedUsada;
+  $("kWhen").textContent = state.cuando;
+  $("sampleBox").classList.remove("hidden");
+  $("csvBtn").disabled = false;
+  $("xlsxBtn").disabled = typeof XLSX === "undefined";
+  $("medColBtn").disabled = false;
+}
+
+$("medColBtn").addEventListener("click", ()=>{
+  const c = parseInt($("medCol").value,10);
+  if(!state.muestra || c < 0){ error("Elija primero la columna que contiene la medición."); return; }
+  error("");
+  const vals = state.muestra.map(i => state.rows[i].valores[c])
+    .map(v => Number(String(v).replace(/\s/g,"").replace(",", ".")))
+    .filter(v => isFinite(v));
+  if(vals.length !== state.muestra.length)
+    error(`Se leyeron ${vals.length} valores numéricos de ${state.muestra.length} filas: revise la columna elegida.`);
+  $("medIn").value = vals.join("; ");
+  render();
+});
+
+/* ===================================================================
+   8. DESCARGAS
+   =================================================================== */
+function registro(){
+  const p = state.plan, esVar = state.modo === "var";
+  const base = [
+    ["Registro del muestreo",""],
+    ["Norma aplicada", esVar ? "NTE INEN-ISO 3951-1 — plan simple por variables, límite de especificación único"
+                             : "NTE INEN-ISO 2859-1 — plan de muestreo simple por atributos"],
+    ["Fecha y hora", state.cuando],
+    ["Archivo", state.fileName],
+    ["Hoja", state.sheet],
+    ["Tamaño del lote (N)", state.N],
+    ["Nivel de inspección", state.nivel],
+    ["Severidad", SEV_LABEL[state.sev]],
+    ["AQL", AQL_LABEL[state.aql]],
+    ["Letra código", p.letra],
+    ["Letra código aplicada", p.letraUsada],
+    ["Flecha resuelta", p.flecha ? ("hacia "+p.flecha) : "no aplica"],
+    ["Tamaño de muestra (n)", p.n],
+    ["Ítems inspeccionados", p.nUsable + (p.cien ? " (inspección al 100 %)" : "")]
+  ];
+  if(esVar){
+    base.push(["Método", p.met === "s" ? 'Método "s" (σ desconocida)' : 'Método "σ" (σ conocida)'],
+              ["Origen de n y k", p.fuente],
+              ["Constante de aceptabilidad k", p.k],
+              ["Límite de especificación", p.limite + " = " + (isFinite(p.lim)?p.lim:"—")]);
+    if(p.met === "sigma") base.push(["σ supuesta", isFinite(p.sigma)?p.sigma:"—"]);
+    if(state.med && state.med.length > 1 && isFinite(p.lim)){
+      const m = media(state.med), s = desvStd(state.med);
+      const disp = p.met === "s" ? s : p.sigma;
+      if(disp > 0){
+        const Q = p.limite === "U" ? (p.lim-m)/disp : (m-p.lim)/disp;
+        base.push(["Media x̄", m], ["Desviación estándar s", s], ["Estadístico Q", Q],
+                  ["Dictamen", Q >= p.k ? "Lote aceptado" : "Lote no aceptado"]);
+      }
+    }
+  } else base.push(["Número de aceptación (Ac)", p.ac], ["Número de rechazo (Re)", p.re]);
+  base.push(["Método de muestreo", $("metodo").value === "simple" ? "Aleatorio simple" : "Aleatorio estratificado proporcional"],
+            ["Columna del estrato", $("metodo").value === "simple" ? "no aplica" : state.headers[state.estratoCol]],
+            ["Semilla", state.seedUsada]);
+  return base;
+}
+function nombreSalida(ext){
+  const f = new Date().toISOString().slice(0,10);
+  const norma = state.modo === "var" ? "ISO3951-1" : "ISO2859-1";
+  return `muestra_${norma}_${state.plan.letraUsada}_n${state.plan.nUsable}_${f}.${ext}`;
+}
+function bajar(blob, nombre){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = nombre;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+$("csvBtn").addEventListener("click", ()=>{
+  const lineas = [["Orden","N° fila", ...state.headers]];
+  state.muestra.forEach((idx,k)=> lineas.push([k+1, state.rows[idx].fila, ...state.rows[idx].valores]));
+  lineas.push([]); registro().forEach(r=>lineas.push(r));
+  const csv = lineas.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(";")).join("\r\n");
+  bajar(new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8"}), nombreSalida("csv"));
+});
+$("xlsxBtn").addEventListener("click", ()=>{
+  if(typeof XLSX === "undefined") return;
+  const aoa = [["Orden","N° fila", ...state.headers]];
+  state.muestra.forEach((idx,k)=> aoa.push([k+1, state.rows[idx].fila, ...state.rows[idx].valores]));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), "Muestra");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(registro()), "Registro");
+  if(state.alloc){
+    const a = [["Estrato","N del estrato","% del universo","Muestra asignada"]];
+    state.alloc.forEach(x=>a.push([x.estrato, x.Nh, +x.prop.toFixed(2), x.nh]));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(a), "Estratos");
+  }
+  XLSX.writeFile(wb, nombreSalida("xlsx"));
+});
+
+/* ===================================================================
+   9. AUTOVERIFICACION CONTRA LOS EJEMPLOS DE LAS NORMAS
+   =================================================================== */
+(function autotest(){
+  const t = [];
+  let r = resolverAtributos(41,"II","normal","4.0");
+  t.push(["2859-1 · N=41, II, normal, AQL 4,0 → D↓E, n=13, Ac 1 / Re 2",
+          r.letra==="D" && r.letraUsada==="E" && r.n===13 && r.ac===1 && r.re===2 && r.flecha==="abajo"]);
+  r = resolverAtributos(1200,"II","normal","4.0");
+  t.push(["2859-1 · N=1200, II, normal, AQL 4,0 → letra J, n=80, Ac 7 / Re 8",
+          r.letraUsada==="J" && r.n===80 && r.ac===7 && r.re===8]);
+  r = resolverAtributos(50,"II","normal","1.0");
+  t.push(["2859-1 · flecha ↓ D→E, n=13, Ac 0 / Re 1",
+          r.letraUsada==="E" && r.n===13 && r.ac===0 && r.re===1 && r.flecha==="abajo"]);
+  r = resolverAtributos(600000,"III","normal","10");
+  t.push(["2859-1 · flecha ↑ R→J, n=80, Ac 21 / Re 22",
+          r.letraUsada==="J" && r.n===80 && r.ac===21 && r.re===22 && r.flecha==="arriba"]);
+  r = resolverAtributos(41,"II","estricta","4.0");
+  t.push(["2859-1 · estricta, N=41 → D↓F, n=20, Ac 1 / Re 2",
+          r.letraUsada==="F" && r.n===20 && r.ac===1 && r.re===2 && r.flecha==="abajo"]);
+  r = resolverAtributos(41,"II","reducida","10");
+  t.push(["2859-1 · reducida, N=41 → letra D, n=3, Ac 1 / Re 2",
+          r.letraUsada==="D" && r.n===3 && r.ac===1 && r.re===2 && !r.flecha]);
+
+  const d1=[53,57,49,58,59,54,58,56,50,50,55,54,57];
+  const QU=(60-media(d1))/desvStd(d1);
+  t.push(["3951-1 · ejemplo 16.2, límite superior: Q = 1,617 ≥ k = 1,426 → acepta",
+          Math.abs(QU-1.617)<0.002 && QU>=1.426]);
+  const d2=[6.95,6.04,6.68,6.63,6.65,6.52,6.59,6.40,6.44,6.34,6.04,6.15,6.29,6.63,
+            6.44,7.15,6.70,6.59,6.51,6.80,5.94,6.35,7.17,6.83,6.25,6.96,7.00,6.38];
+  const QL=(media(d2)-4.0)/desvStd(d2);
+  t.push(["3951-1 · ejemplo 16.2, límite inferior: Q = 7,847 ≥ k = 2,580 → acepta",
+          Math.abs(QL-7.847)<0.005 && QL>=2.580]);
+  const d3=[431,417,469,407,450,452,427,411,429,420,400];
+  t.push(['3951-1 · ejemplo 17.2, método "σ": x̄ = 428,45 < L + kσ = 442,97 → no acepta',
+          media(d3) < 400+2.046*21]);
+
+  const ok = t.filter(x=>x[1]).length;
+  $("selftest").innerHTML = `<b>Autoverificación del motor de cálculo:</b> `+
+    `<span class="${ok===t.length?"ok":"bad"}">${ok} de ${t.length} comprobaciones correctas</span><br>`+
+    t.map(x=>`${x[1]?"✓":"✗"} ${esc(x[0])}`).join("<br>");
+})();
+
+syncOrigen();
+setModo("atr");
+</script>
+</body>
+</html>

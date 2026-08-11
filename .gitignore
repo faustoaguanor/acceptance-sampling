@@ -1,0 +1,10 @@
+# Archivos generados localmente
+*.xlsx
+*.xls
+~$*
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.vscode/
+
