@@ -278,7 +278,7 @@ footer.foot li{margin-bottom:4px}
           <label class="fld" style="margin-bottom:var(--s2)">
             <span class="lb">Mediciones de la muestra</span>
             <input type="text" id="medIn" placeholder="53; 57; 49; 58; 59 …">
-            <p class="hint">Separe con coma, punto y coma o espacio. También puede tomarlas de una columna del archivo.</p>
+            <p class="hint">Separe con punto y coma o espacio; así la coma se lee como decimal (6,95; 6,04). También puede tomarlas de una columna del archivo.</p>
           </label>
           <div class="row" style="margin-bottom:var(--s3)">
             <select id="medCol" style="max-width:260px"><option value="-1">Columna de la medición…</option></select>
@@ -413,7 +413,7 @@ const PLANES = {
   normal: {
     "1.0": ["v","v","v","v",[0,1],"^","v",[1,2],[2,3],[3,4],[5,6],[7,8],[10,11],[14,15],[21,22],"^"],
     "4.0": ["v",[0,1],"^","v",[1,2],[2,3],[3,4],[5,6],[7,8],[10,11],[14,15],[21,22],"^","^","^","^"],
-    "10":  ["v",[1,2],[2,3],[3,4],[5,6],[7,8],[10,11],[14,15],[21,22],"^","^","^","^","^","^","^"]
+    "10":  ["v","v",[1,2],[2,3],[3,4],[5,6],[7,8],[10,11],[14,15],[21,22],"^","^","^","^","^","^"]
   },
   estricta: {
     "1.0": ["v","v","v","v","v",[0,1],"v","v",[1,2],[2,3],[3,4],[5,6],[8,9],[12,13],[18,19],"^"],
@@ -460,7 +460,7 @@ function letraCodigo(N, nivel){
 }
 function resolverAtributos(N, nivel, sev, aql){
   const letra = letraCodigo(N, nivel);
-  if(!letra) return {error:"El tamaño del lote debe ser 2 o mayor."};
+  if(!letra) return {error:"El tamaño del lote debe ser un número entero, 2 o mayor."};
   const col = PLANES[sev][aql];
   const idx = LETRAS.indexOf(letra);
   let usada = idx, flecha = null;
@@ -497,7 +497,8 @@ const state = {
   metvar:"s", limite:"U", origNk:"manual",
   N:1200, plan:null,
   fileName:"", sheet:"", headers:[], rows:[], muestra:null, alloc:null,
-  seedUsada:"", cuando:"", estratoCol:0, med:null
+  seedUsada:"", cuando:"", estratoCol:0, med:null,
+  firmaMuestra:"", metodoUsado:"simple", min1Usado:false
 };
 
 function segInit(id, key, cb){
@@ -567,11 +568,26 @@ function celdas(items){
     `<div class="cell"><div class="k">${it[0]}</div><div class="v">${it[1]}</div></div>`).join("");
 }
 function render(){
+  const nTxt = Number($("lotSize").value);
   state.N = (state.origen === "archivo" && state.rows.length) ? state.rows.length
-          : parseInt($("lotSize").value, 10);
+          : (Number.isInteger(nTxt) ? nTxt : NaN);
   if(state.origen === "archivo" && state.rows.length) $("lotSize").value = state.N;
   $("notes").innerHTML = "";
   if(state.modo === "atr") renderAtributos(); else renderVariables();
+  if(state.muestra && firmaPlan() !== state.firmaMuestra) invalidarMuestra(
+    "Los parámetros del plan cambiaron después de generar la muestra. Pulse <b>Generar muestra</b> de nuevo para que la muestra y el registro coincidan.");
+}
+/* Identifica el plan con que se extrajo la muestra: si cambia, la muestra y el registro dejarían de coincidir. */
+function firmaPlan(){
+  const p = state.plan;
+  return p ? [state.modo, state.sheet, state.N, state.nivel, state.sev, state.aql, p.letraUsada, p.nUsable,
+              state.modo==="var" ? state.metvar : ""].join("|") : "";
+}
+function invalidarMuestra(msg){
+  state.muestra=null; state.alloc=null; state.firmaMuestra="";
+  $("sampleBox").classList.add("hidden"); $("allocBox").classList.add("hidden");
+  $("csvBtn").disabled=true; $("xlsxBtn").disabled=true; $("medColBtn").disabled=true;
+  if(msg) error(msg);
 }
 
 function renderAtributos(){
@@ -689,8 +705,9 @@ function pintarMaestra(p){
 }
 
 function pintarVeredictoAtr(){
-  const v = $("veredicto"), d = parseInt($("dFound").value,10);
-  if(state.modo!=="atr" || !state.plan || isNaN(d) || d<0){ v.className="verdict mid"; v.textContent="Ingrese d"; return; }
+  const v = $("veredicto"), dTxt = $("dFound").value.trim(), d = Number(dTxt);
+  if(state.modo!=="atr" || !state.plan || dTxt==="" || !Number.isInteger(d) || d<0){ v.className="verdict mid"; v.textContent="Ingrese d (entero ≥ 0)"; return; }
+  if(d > state.plan.nUsable){ v.className="verdict mid"; v.textContent=`d = ${d} supera los ${state.plan.nUsable} ítems inspeccionados`; return; }
   if(d <= state.plan.ac){ v.className="verdict ok"; v.textContent = `Lote aceptado · d = ${d} ≤ Ac = ${state.plan.ac}`; }
   else { v.className="verdict no"; v.textContent = `Lote no aceptado · d = ${d} ≥ Re = ${state.plan.re}`; }
 }
@@ -698,9 +715,13 @@ function pintarVeredictoAtr(){
 /* ===================================================================
    5. ESTADISTICA DE VARIABLES
    =================================================================== */
+/* Con ";" o espacios como separador, la coma pegada a dígitos es decimal ("6,95; 6,04").
+   Sin ";" ni espacios, la coma separa valores ("53,57,49"). */
 function parseNums(txt){
-  return String(txt).split(/[\s,;]+/).map(t=>t.replace(",", ".")).filter(t=>t!=="")
-         .map(Number).filter(x=>isFinite(x));
+  txt = String(txt).trim();
+  const tokens = /[;\s]/.test(txt) ? txt.split(/;|\s+|,(?=\s|$)/) : txt.split(",");
+  return tokens.map(t=>t.trim()).filter(t=>t!=="")
+         .map(t=>Number(t.replace(",", "."))).filter(x=>isFinite(x));
 }
 function media(a){ return a.reduce((x,y)=>x+y,0)/a.length; }
 function desvStd(a){ const m=media(a); return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)); }
@@ -876,9 +897,7 @@ function usarHoja(nombre){
     [...$("seg-origen").querySelectorAll("button")].forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v==="archivo")));
     state.origen = "archivo"; syncOrigen();
   }
-  state.muestra=null; state.alloc=null;
-  $("sampleBox").classList.add("hidden"); $("allocBox").classList.add("hidden");
-  $("csvBtn").disabled=true; $("xlsxBtn").disabled=true; $("medColBtn").disabled=true;
+  invalidarMuestra();
   render();
 }
 $("metodo").addEventListener("change", ()=>{
@@ -951,7 +970,8 @@ function generar(){
     elegidos.sort((a,b)=>a-b);
     state.estratoCol = col;
   }
-  state.muestra = elegidos; state.alloc = alloc;
+  state.muestra = elegidos; state.alloc = alloc; state.firmaMuestra = firmaPlan();
+  state.metodoUsado = $("metodo").value; state.min1Usado = $("metodo").value !== "simple" && $("min1").checked;
   state.seedUsada = semilla; state.cuando = new Date().toLocaleString("es-EC");
   pintarMuestra();
 }
@@ -984,7 +1004,8 @@ $("medColBtn").addEventListener("click", ()=>{
   if(!state.muestra || c < 0){ error("Elija primero la columna que contiene la medición."); return; }
   error("");
   const vals = state.muestra.map(i => state.rows[i].valores[c])
-    .map(v => Number(String(v).replace(/\s/g,"").replace(",", ".")))
+    .map(v => String(v).replace(/\s/g,"").replace(",", "."))
+    .filter(v => v !== "").map(Number)          /* celda vacía no es 0 */
     .filter(v => isFinite(v));
   if(vals.length !== state.muestra.length)
     error(`Se leyeron ${vals.length} valores numéricos de ${state.muestra.length} filas: revise la columna elegida.`);
@@ -1030,8 +1051,10 @@ function registro(){
       }
     }
   } else base.push(["Número de aceptación (Ac)", p.ac], ["Número de rechazo (Re)", p.re]);
-  base.push(["Método de muestreo", $("metodo").value === "simple" ? "Aleatorio simple" : "Aleatorio estratificado proporcional"],
-            ["Columna del estrato", $("metodo").value === "simple" ? "no aplica" : state.headers[state.estratoCol]],
+  const simple = state.metodoUsado === "simple";
+  base.push(["Método de muestreo", simple ? "Aleatorio simple" : "Aleatorio estratificado proporcional" +
+                                   (state.min1Usado ? " (mínimo 1 ítem por estrato)" : "")],
+            ["Columna del estrato", simple ? "no aplica" : state.headers[state.estratoCol]],
             ["Semilla", state.seedUsada]);
   return base;
 }
@@ -1083,8 +1106,23 @@ $("xlsxBtn").addEventListener("click", ()=>{
   t.push(["2859-1 · flecha ↓ D→E, n=13, Ac 0 / Re 1",
           r.letraUsada==="E" && r.n===13 && r.ac===0 && r.re===1 && r.flecha==="abajo"]);
   r = resolverAtributos(600000,"III","normal","10");
-  t.push(["2859-1 · flecha ↑ R→J, n=80, Ac 21 / Re 22",
-          r.letraUsada==="J" && r.n===80 && r.ac===21 && r.re===22 && r.flecha==="arriba"]);
+  t.push(["2859-1 · flecha ↑ R→K, n=125, Ac 21 / Re 22",
+          r.letraUsada==="K" && r.n===125 && r.ac===21 && r.re===22 && r.flecha==="arriba"]);
+  r = resolverAtributos(1200,"II","normal","10");
+  t.push(["2859-1 · N=1200, II, normal, AQL 10 → letra J, n=80, Ac 14 / Re 15",
+          r.letraUsada==="J" && r.n===80 && r.ac===14 && r.re===15 && !r.flecha]);
+  r = resolverAtributos(8,"II","normal","10");
+  t.push(["2859-1 · flecha ↓ doble A→C, n=5, Ac 1 / Re 2",
+          r.letra==="A" && r.letraUsada==="C" && r.n===5 && r.ac===1 && r.re===2 && r.flecha==="abajo"]);
+  r = resolverAtributos(4,"II","normal","10");
+  t.push(["2859-1 · N=4: la flecha lleva a n=5 ≥ N → inspección al 100 %",
+          r.letraUsada==="C" && r.cien && r.nUsable===4]);
+  r = resolverAtributos(500,"II","estricta","1.0");
+  t.push(["2859-1 · estricta, N=500, AQL 1,0 → H↓J, n=80, Ac 1 / Re 2",
+          r.letra==="H" && r.letraUsada==="J" && r.n===80 && r.ac===1 && r.re===2]);
+  r = resolverAtributos(3000,"II","reducida","4.0");
+  t.push(["2859-1 · reducida, N=3000, AQL 4,0 → K, n=50, Ac 6 / Re 7",
+          r.letraUsada==="K" && r.n===50 && r.ac===6 && r.re===7 && !r.flecha]);
   r = resolverAtributos(41,"II","estricta","4.0");
   t.push(["2859-1 · estricta, N=41 → D↓F, n=20, Ac 1 / Re 2",
           r.letraUsada==="F" && r.n===20 && r.ac===1 && r.re===2 && r.flecha==="abajo"]);
@@ -1104,6 +1142,10 @@ $("xlsxBtn").addEventListener("click", ()=>{
   const d3=[431,417,469,407,450,452,427,411,429,420,400];
   t.push(['3951-1 · ejemplo 17.2, método "σ": x̄ = 428,45 < L + kσ = 442,97 → no acepta',
           media(d3) < 400+2.046*21]);
+
+  const pn = parseNums("6,95; 6,04 6,68"), pc = parseNums("53,57,49"), pd = parseNums("53, 57, 49.5");
+  t.push(["Lectura de mediciones: coma decimal con «;» o espacio, coma como separador sin ellos",
+          pn.join()==="6.95,6.04,6.68" && pc.join()==="53,57,49" && pd.join()==="53,57,49.5"]);
 
   const ok = t.filter(x=>x[1]).length;
   $("selftest").innerHTML = `<b>Autoverificación del motor de cálculo:</b> `+

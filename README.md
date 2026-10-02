@@ -56,6 +56,26 @@ indica usar el primer plan por debajo: letra `E`, `n = 13`, `Ac = 1` y
 `Re = 2`. La aplicación muestra ambos valores para que el salto no quede
 oculto.
 
+## Verificación de las tablas
+
+`tests/tablas_iso2859.test.js` compara las Tablas 1, 2-A, 2-B y 2-C del motor
+con una transcripción independiente de la NTE INEN-ISO 2859-1, incluida la
+resolución de flechas en todos los bordes de lote, niveles, severidades y AQL:
+
+```bash
+node tests/tablas_iso2859.test.js
+```
+
+Casos de flecha útiles para revisar a mano (inspección normal, nivel II):
+
+| N    | AQL  | Letra del lote | Plan aplicado        | Nota                          |
+|------|------|----------------|----------------------|-------------------------------|
+| 41   | 4,0  | D ↓            | E: n=13, Ac 1, Re 2  | flecha hacia abajo            |
+| 8    | 10   | A ↓            | C: n=5, Ac 1, Re 2   | baja dos letras (A→B→C)       |
+| 4    | 10   | A ↓            | C: n=5 ≥ N           | inspección al 100 %           |
+| 1200 | 10   | J              | J: n=80, Ac 14, Re 15| sin flecha                    |
+| 600000 (nivel III) | 10 | R ↑ | K: n=125, Ac 21, Re 22 | flecha hacia arriba        |
+
 ## Ejemplo 1: trámites catastrales
 
 Archivos: [`examples/tramites-catastrales/`](examples/tramites-catastrales/).
