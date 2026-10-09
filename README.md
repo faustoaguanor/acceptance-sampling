@@ -1,54 +1,105 @@
-# Muestreo de aceptación — ISO 2859-1 e ISO 3951-1
+<div align="center">
 
-Aplicación web estática para calcular planes de muestreo de aceptación y
-extraer una muestra reproducible desde un archivo CSV o XLSX. Está orientada
-a controles de calidad de datos, expedientes y mediciones, con procesamiento
-local en el navegador.
+# Muestreo de aceptación · ISO 2859-1 e ISO 3951-1
 
-## Qué incluye
+**Calculadora web de planes de muestreo de aceptación y extractor de muestras reproducibles para controles de calidad de datos, expedientes y mediciones.**
 
-- Planes simples por atributos de NTE INEN-ISO 2859-1.
-- Tablas 1, 2-A, 2-B y 2-C para nivel general II y niveles I/III.
-- Inspección normal, estricta y reducida.
-- AQL 1,0 %, 4,0 % y 10 %.
-- Resolución explícita de flechas: muestra la letra original, la letra
-  aplicada, `n`, `Ac` y `Re`.
-- Extracción aleatoria simple o estratificada proporcional, con opción de
-  asignar al menos un elemento por estrato.
-- Planes simples por variables de forma `k`, con un límite de especificación
-  único y método `s` o `σ`.
-- Descarga de la muestra en CSV o XLSX. El XLSX incluye las hojas `Muestra`,
-  `Registro` y, si corresponde, `Estratos`.
+[![Demo en línea](https://img.shields.io/badge/demo-en%20l%C3%ADnea-0d5c8a?style=for-the-badge&logo=githubpages&logoColor=white)](https://faustoaguanor.github.io/acceptance-sampling/)
+[![Licencia MIT](https://img.shields.io/badge/licencia-MIT-green?style=for-the-badge)](LICENSE)
+![Sin servidor](https://img.shields.io/badge/backend-ninguno-informational?style=for-the-badge)
+![JavaScript](https://img.shields.io/badge/JavaScript-vanilla-f7df1e?style=for-the-badge&logo=javascript&logoColor=black)
 
-## Uso rápido
+### 🔗 [**Abrir la demo en línea →**](https://faustoaguanor.github.io/acceptance-sampling/)
 
-1. Abra `index.html` en un navegador moderno. También puede publicarlo con
-   GitHub Pages.
-2. Elija **Por atributos** o **Por variables** y defina lote, nivel, tipo de
-   inspección y AQL.
-3. Cargue un CSV/XLSX cuyo encabezado esté en la primera fila.
-4. Seleccione muestreo simple o estratificado y, para este último, la columna
-   que identifica el estrato.
-5. Pulse **Generar muestra** y descargue el respaldo CSV/XLSX.
+<img src="docs/img/atributos.png" alt="Interfaz de la aplicación: plan por atributos N = 41, AQL 4,0 %, letra E, n = 13, Ac = 1, Re = 2, y muestra extraída" width="900">
 
-La dependencia de Excel está incluida en `libs/xlsx.full.min.js`, por lo que
-la lectura y descarga de XLSX no depende de que una CDN esté disponible.
+</div>
 
-## Publicar desde Windows
+---
 
-Si descargó este proyecto como paquete, abra PowerShell en la carpeta raíz y
-ejecute:
+## Tabla de contenidos
 
-```powershell
-gh auth status
-.\publish.ps1
+- [Por qué existe](#por-qué-existe)
+- [Capturas de pantalla](#capturas-de-pantalla)
+- [Características](#características)
+- [Inicio rápido](#inicio-rápido)
+- [Verificación y exactitud](#verificación-y-exactitud)
+- [Ejemplos reproducibles](#ejemplos-reproducibles)
+- [Límites de uso](#límites-de-uso)
+- [Privacidad y reproducibilidad](#privacidad-y-reproducibilidad)
+- [Estructura del repositorio](#estructura-del-repositorio)
+- [Despliegue](#despliegue)
+- [Licencia y atribuciones](#licencia-y-atribuciones)
+
+## Por qué existe
+
+Aplicar una tabla de muestreo a mano es propenso a errores, sobre todo cuando
+la celda de la letra de código tiene una **flecha** que obliga a saltar a otro
+plan. Esta herramienta resuelve el plan, **muestra la letra original y la
+aplicada** para que el salto quede documentado, y extrae la muestra aleatoria
+con una semilla registrada, de modo que el control sea **auditable y repetible**.
+
+## Capturas de pantalla
+
+| Plan por atributos (ISO 2859-1) | Plan por variables (ISO 3951-1) |
+|:--:|:--:|
+| ![Plan por atributos](docs/img/atributos.png) | ![Plan por variables](docs/img/variables.png) |
+
+> Caso mostrado: lote de 41 trámites, inspección normal, nivel general II,
+> AQL 4,0 %. La letra `D` lleva flecha hacia abajo, se aplica la letra `E`
+> (`n = 13`, `Ac = 1`, `Re = 2`) y con `d = 1` el lote se acepta.
+
+## Características
+
+| Módulo | Detalle |
+|---|---|
+| **Atributos · NTE INEN-ISO 2859-1** | Planes simples, Tablas 1, 2-A, 2-B y 2-C; niveles generales I, II y III; inspección normal, estricta y reducida; AQL 1,0 %, 4,0 % y 10 % |
+| **Resolución de flechas** | Muestra la letra original, la letra aplicada, `n`, `Ac` y `Re` |
+| **Variables · ISO 3951-1** | Planes simples de forma `k`, un límite de especificación (`U` o `L`), métodos `s` y `σ`, con gráfico de aceptación |
+| **Extracción de muestra** | Aleatoria simple o estratificada proporcional, con opción de al menos un elemento por estrato |
+| **Reproducibilidad** | Semilla configurable; el resultado se puede regenerar idéntico |
+| **Entrada / salida** | Lee CSV y XLSX; descarga CSV o XLSX con hojas `Muestra`, `Registro` y `Estratos` |
+| **Autoverificación** | El motor ejecuta 9 comprobaciones contra casos conocidos de las normas al cargar |
+| **Privacidad** | 100 % en el navegador, sin servidor ni telemetría |
+
+## Inicio rápido
+
+**Opción 1 — En línea:** abra la [demo](https://faustoaguanor.github.io/acceptance-sampling/).
+
+**Opción 2 — Local:** no requiere instalación ni compilación.
+
+```bash
+git clone https://github.com/faustoaguanor/acceptance-sampling.git
+cd acceptance-sampling
+# abra index.html en el navegador, o sirva la carpeta:
+python3 -m http.server 8000   # http://localhost:8000
 ```
 
-El script inicializa Git, configura el repositorio remoto y publica la rama
-`main`. Está pensado para este repositorio vacío; si ya contiene cambios,
-revise el estado antes de ejecutar el `push`.
+**Flujo de uso**
 
-## Comprobación de la flecha: N = 41, AQL = 4,0 %
+1. Elija **Por atributos** o **Por variables** y defina lote, nivel, severidad y AQL.
+2. Cargue un CSV/XLSX con el encabezado en la primera fila (o ingrese solo `N`).
+3. Seleccione muestreo simple o estratificado y, en este caso, la columna del estrato.
+4. Pulse **Generar muestra**.
+5. Registre los no conformes hallados (`d`) o las mediciones y obtenga el dictamen.
+6. Descargue el respaldo CSV/XLSX.
+
+La librería de Excel está incluida en `libs/xlsx.full.min.js`: la lectura y
+descarga de XLSX no depende de una CDN.
+
+## Verificación y exactitud
+
+Al cargar, la aplicación autoverifica su motor (sección inferior de la
+página). Algunos de los casos comprobados:
+
+- ISO 2859-1 · `N = 41`, II, normal, AQL 4,0 % → `D↓E`, `n = 13`, `Ac 1 / Re 2`
+- ISO 2859-1 · `N = 1200`, II, normal, AQL 4,0 % → letra `J`, `n = 80`, `Ac 7 / Re 8`
+- Flechas ↓ y ↑, inspección estricta y reducida
+- ISO 3951-1 · ejemplos 16.2 (límite superior e inferior) y 17.2 (método `σ`)
+
+## Ejemplos reproducibles
+
+### Comprobación de la flecha: N = 41, AQL = 4,0 %
 
 Con inspección normal y nivel general II, el tamaño de lote `N = 41` produce
 la letra de código `D`. En la Tabla 2-A, la flecha de la columna AQL 4,0 %
@@ -56,7 +107,7 @@ indica usar el primer plan por debajo: letra `E`, `n = 13`, `Ac = 1` y
 `Re = 2`. La aplicación muestra ambos valores para que el salto no quede
 oculto.
 
-## Ejemplo 1: trámites catastrales
+### Ejemplo 1: trámites catastrales
 
 Archivos: [`examples/tramites-catastrales/`](examples/tramites-catastrales/).
 
@@ -73,7 +124,7 @@ reproducir el caso anterior:
 
 La carpeta contiene instrucciones y datos sin información personal.
 
-## Ejemplo 2: puntos GNSS de Quito
+### Ejemplo 2: puntos GNSS de Quito
 
 Archivos: [`examples/gnss-quito/`](examples/gnss-quito/).
 
@@ -114,6 +165,34 @@ aplicación. No publique datos reales de ciudadanos, expedientes o coordenadas
 en un repositorio público. Conserve el XLSX descargado: contiene el registro
 del plan, la semilla usada y, en el caso estratificado, la asignación por
 estrato.
+
+## Estructura del repositorio
+
+```text
+.
+├── index.html            # aplicación completa (HTML + CSS + JS)
+├── libs/                 # SheetJS (lectura/escritura XLSX) y su licencia
+├── examples/             # datos sintéticos y guías de uso
+│   ├── tramites-catastrales/
+│   └── gnss-quito/
+├── docs/img/             # capturas de pantalla
+├── publish.ps1           # script de publicación para Windows
+├── ATTRIBUTIONS.md
+└── LICENSE
+```
+
+## Despliegue
+
+La aplicación es estática y se publica con **GitHub Pages**:
+*Settings → Pages → Source: Deploy from a branch → `main` / `(root)`*. La URL
+resultante es `https://faustoaguanor.github.io/acceptance-sampling/`.
+
+En Windows también puede usar `publish.ps1` (requiere Git y GitHub CLI):
+
+```powershell
+gh auth status
+.\publish.ps1
+```
 
 ## Licencia y atribuciones
 
